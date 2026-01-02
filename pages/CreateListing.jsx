@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { 
@@ -10,16 +9,9 @@ import {
   Sparkles,
   Info
 } from 'lucide-react';
-import { RoomType, GenderPreference, Room, User } from '../types';
-import { getSmartRoomDescription } from '../geminiService';
+import { getSmartRoomDescription } from '../geminiService.js';
 
-interface CreateListingProps {
-  setRooms: React.Dispatch<React.SetStateAction<Room[]>>;
-  user: User | null;
-  onLoginRequired: () => void;
-}
-
-const CreateListing: React.FC<CreateListingProps> = ({ setRooms, user, onLoginRequired }) => {
+const CreateListing = ({ setRooms, user, onLoginRequired }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loadingAi, setLoadingAi] = useState(false);
@@ -34,16 +26,16 @@ const CreateListing: React.FC<CreateListingProps> = ({ setRooms, user, onLoginRe
     price: '',
     area: 'Dhanmondi',
     address: '',
-    type: RoomType.SINGLE,
-    gender: GenderPreference.ANY,
-    amenities: [] as string[],
-    rules: [] as string[]
+    type: 'Single',
+    gender: 'Any',
+    amenities: [],
+    rules: []
   });
 
   const amenitiesOptions = ['WiFi', 'Kitchen', 'Attached Bath', 'AC', 'Lift', 'Generator', 'Parking'];
   const rulesOptions = ['Bachelor Allowed', 'No Smoking', 'No Alcohol', 'No Parties', 'Curfew 11 PM'];
 
-  const handleToggle = (list: string[], item: string, key: 'amenities' | 'rules') => {
+  const handleToggle = (list, item, key) => {
     const updated = list.includes(item) ? list.filter(i => i !== item) : [...list, item];
     setFormData({ ...formData, [key]: updated });
   };
@@ -56,9 +48,9 @@ const CreateListing: React.FC<CreateListingProps> = ({ setRooms, user, onLoginRe
     setLoadingAi(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const newRoom: Room = {
+    const newRoom = {
       id: Date.now().toString(),
       title: formData.title,
       description: formData.description,
@@ -171,7 +163,7 @@ const CreateListing: React.FC<CreateListingProps> = ({ setRooms, user, onLoginRe
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide">Room Type</label>
                   <div className="flex flex-col gap-2">
-                    {[RoomType.SINGLE, RoomType.SHARED].map(t => (
+                    {['Single', 'Shared'].map(t => (
                       <button 
                         key={t}
                         type="button"
@@ -187,14 +179,14 @@ const CreateListing: React.FC<CreateListingProps> = ({ setRooms, user, onLoginRe
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-4 uppercase tracking-wide">Gender</label>
                   <div className="flex flex-col gap-2">
-                    {[GenderPreference.MALE, GenderPreference.FEMALE, GenderPreference.ANY].map(g => (
+                    {['Male', 'Female', 'Any'].map(g => (
                       <button 
                         key={g}
                         type="button"
                         onClick={() => setFormData({...formData, gender: g})}
                         className={`p-4 rounded-2xl border font-bold text-sm transition-all text-left flex justify-between items-center ${formData.gender === g ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-gray-50 text-gray-400'}`}
                       >
-                        {g === GenderPreference.ANY ? 'Any / Unisex' : g}
+                        {g === 'Any' ? 'Any / Unisex' : g}
                         {formData.gender === g && <Check size={18} />}
                       </button>
                     ))}

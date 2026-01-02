@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
@@ -19,19 +18,9 @@ import {
   Calendar,
   Clock
 } from 'lucide-react';
-import { Room, BookingRequest, User } from '../types';
-import { getAreaInsights } from '../geminiService';
+import { getAreaInsights } from '../geminiService.js';
 
-interface RoomDetailProps {
-  rooms: Room[];
-  favorites: string[];
-  toggleFavorite: (id: string) => void;
-  onBookRequest: (request: Omit<BookingRequest, 'id' | 'status' | 'createdAt'>) => void;
-  currentUser: User | null;
-  onLoginRequired: () => void;
-}
-
-const RoomDetail: React.FC<RoomDetailProps> = ({ 
+const RoomDetail = ({ 
   rooms, 
   favorites, 
   toggleFavorite, 
@@ -43,7 +32,7 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
   const navigate = useNavigate();
   const room = rooms.find(r => r.id === id);
   const [activeImage, setActiveImage] = useState(0);
-  const [aiInsight, setAiInsight] = useState<string>('');
+  const [aiInsight, setAiInsight] = useState('');
   const [loadingAi, setLoadingAi] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [bookingFormData, setBookingFormData] = useState({
@@ -82,7 +71,7 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
     }
   };
 
-  const handleBookingSubmit = (e: React.FormEvent) => {
+  const handleBookingSubmit = (e) => {
     e.preventDefault();
     if (!currentUser) return;
     
@@ -176,7 +165,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
       )}
 
       <div className="max-w-7xl mx-auto px-4 py-6 md:px-8">
-        {/* Navigation & Actions */}
         <div className="flex items-center justify-between mb-8">
           <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors font-medium">
             <ArrowLeft size={20} />
@@ -200,9 +188,7 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
         </div>
 
         <div className="flex flex-col lg:flex-row gap-12">
-          {/* Main Content */}
           <div className="flex-1 space-y-10">
-            {/* Carousel Gallery */}
             <div className="space-y-4">
               <div className="relative group aspect-video rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-gray-100">
                 <img 
@@ -210,8 +196,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
                   alt={`${room.title} - view ${activeImage + 1}`} 
                   className="w-full h-full object-cover transition-opacity duration-300" 
                 />
-                
-                {/* Carousel Controls */}
                 {room.images.length > 1 && (
                   <>
                     <button 
@@ -228,8 +212,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
                     >
                       <ChevronRight size={24} />
                     </button>
-                    
-                    {/* Image Counter Badge */}
                     <div className="absolute bottom-4 right-4 bg-gray-900/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold tracking-wider">
                       {activeImage + 1} / {room.images.length}
                     </div>
@@ -237,7 +219,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
                 )}
               </div>
 
-              {/* Thumbnails */}
               <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar scrollbar-hide">
                 {room.images.map((img, idx) => (
                   <button 
@@ -258,7 +239,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
               </div>
             </div>
 
-            {/* Header Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <span className="bg-indigo-600 text-white text-[10px] font-black uppercase px-2 py-1 rounded tracking-tighter">New Listing</span>
@@ -276,7 +256,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
 
             <hr className="border-gray-100" />
 
-            {/* Room Features */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="flex flex-col gap-1">
                 <span className="text-xs text-gray-400 font-bold uppercase">Room Type</span>
@@ -296,7 +275,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
               </div>
             </div>
 
-            {/* AI Insights Card */}
             <div className="bg-indigo-50/50 rounded-3xl p-8 border border-indigo-100 relative overflow-hidden group">
               <div className="absolute -top-6 -right-6 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-700"></div>
               <div className="flex items-center gap-3 mb-4">
@@ -316,7 +294,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
               )}
             </div>
 
-            {/* Description */}
             <div>
               <h3 className="text-2xl font-bold mb-6">About the room</h3>
               <p className="text-gray-600 leading-relaxed text-lg">
@@ -324,7 +301,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
               </p>
             </div>
 
-            {/* Amenities */}
             <div>
               <h3 className="text-2xl font-bold mb-6">What this place offers</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6">
@@ -337,7 +313,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
               </div>
             </div>
 
-            {/* Nearby Universities */}
             <div className="bg-slate-50 rounded-3xl p-8">
               <div className="flex items-center gap-3 mb-8">
                 <div className="bg-white p-2 rounded-xl text-indigo-600 shadow-sm"><GraduationCap /></div>
@@ -354,7 +329,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
             </div>
           </div>
 
-          {/* Booking / Sidebar */}
           <div className="lg:w-96">
             <div className="sticky top-28 space-y-6">
               <div className="bg-white border border-gray-100 shadow-2xl shadow-indigo-100/50 rounded-3xl p-8 overflow-hidden relative">
@@ -409,7 +383,6 @@ const RoomDetail: React.FC<RoomDetailProps> = ({
                 <p className="mt-6 text-center text-xs text-gray-400 font-bold uppercase tracking-widest">Available from Nov 1st</p>
               </div>
 
-              {/* Owner Info */}
               <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 flex items-center gap-4">
                 <img src={`https://picsum.photos/id/${parseInt(room.id)+50}/100/100`} className="w-14 h-14 rounded-2xl object-cover shadow-sm" />
                 <div>

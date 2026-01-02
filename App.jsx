@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { 
@@ -16,29 +15,23 @@ import {
   LogOut,
   LayoutDashboard
 } from 'lucide-react';
-import Home from './pages/Home';
-import Explore from './pages/Explore';
-import RoomDetail from './pages/RoomDetail';
-import Dashboard from './pages/Dashboard';
-import CreateListing from './pages/CreateListing';
-import Favorites from './pages/Favorites';
-import AuthModal from './components/AuthModal';
-import { Room, User, BookingRequest } from './types';
-import { MOCK_ROOMS } from './mockData';
+import Home from './pages/Home.jsx';
+import Explore from './pages/Explore.jsx';
+import RoomDetail from './pages/RoomDetail.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import CreateListing from './pages/CreateListing.jsx';
+import Favorites from './pages/Favorites.jsx';
+import AuthModal from './components/AuthModal.jsx';
+import { MOCK_ROOMS } from './mockData.js';
 
 const Navbar = ({ 
   user, 
   onLogout, 
   onLoginClick, 
   toggleMenu 
-}: { 
-  user: User | null, 
-  onLogout: () => void, 
-  onLoginClick: () => void,
-  toggleMenu: () => void 
 }) => {
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path) => location.pathname === path;
   const [showDropdown, setShowDropdown] = useState(false);
 
   return (
@@ -121,7 +114,7 @@ const Navbar = ({
   );
 };
 
-const MobileMenu = ({ isOpen, close, user, onLoginClick }: { isOpen: boolean, close: () => void, user: User | null, onLoginClick: () => void }) => {
+const MobileMenu = ({ isOpen, close, user, onLoginClick }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[100] bg-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
@@ -157,21 +150,20 @@ const MobileMenu = ({ isOpen, close, user, onLoginClick }: { isOpen: boolean, cl
   );
 };
 
-const App: React.FC = () => {
-  const [rooms, setRooms] = useState<Room[]>(MOCK_ROOMS);
-  const [favorites, setFavorites] = useState<string[]>([]);
+const App = () => {
+  const [rooms, setRooms] = useState(MOCK_ROOMS);
+  const [favorites, setFavorites] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [bookingRequests, setBookingRequests] = useState([]);
 
-  // Load user from storage on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
   }, []);
 
-  const handleLogin = (user: User) => {
+  const handleLogin = (user) => {
     setCurrentUser(user);
     localStorage.setItem('user', JSON.stringify(user));
   };
@@ -181,7 +173,7 @@ const App: React.FC = () => {
     localStorage.removeItem('user');
   };
 
-  const toggleFavorite = (id: string) => {
+  const toggleFavorite = (id) => {
     if (!currentUser) {
       setIsAuthModalOpen(true);
       return;
@@ -189,12 +181,12 @@ const App: React.FC = () => {
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
   };
 
-  const addBookingRequest = (request: Omit<BookingRequest, 'id' | 'status' | 'createdAt'>) => {
+  const addBookingRequest = (request) => {
     if (!currentUser) {
       setIsAuthModalOpen(true);
       return;
     }
-    const newRequest: BookingRequest = {
+    const newRequest = {
       ...request,
       id: Date.now().toString(),
       status: 'pending',
@@ -205,7 +197,7 @@ const App: React.FC = () => {
     setBookingRequests(prev => [newRequest, ...prev]);
   };
 
-  const updateRequestStatus = (id: string, status: 'accepted' | 'rejected') => {
+  const updateRequestStatus = (id, status) => {
     setBookingRequests(prev => prev.map(req => req.id === id ? { ...req, status } : req));
   };
 

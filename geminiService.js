@@ -1,8 +1,30 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// The Gemini client requires an API key. In development you may not set one —
+// avoid constructing the client in that case so the browser doesn't throw.
+const API_KEY = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
+
+let ai = null;
+if (API_KEY) {
+  try {
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+  } catch (err) {
+    console.warn('Failed to initialize Gemini client:', err);
+    ai = null;
+  }
+} else {
+  // Silently allow app to run without AI features but log for developer visibility.
+  // Do not throw — embedding API keys in client bundles is insecure anyway.
+  // Recommended: move calls to a server-side endpoint that holds the API key.
+  console.warn('Gemini API key not found. AI features are disabled. Set GEMINI_API_KEY in your environment to enable.');
+}
 
 export const getSmartRoomDescription = async (details) => {
+  if (!ai) {
+    // graceful fallback when AI isn't available
+    return 'Affordable housing option for students in a prime location.';
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -13,12 +35,16 @@ export const getSmartRoomDescription = async (details) => {
     });
     return response.text;
   } catch (error) {
-    console.error("Gemini description error:", error);
-    return "Affordable housing option for students in a prime location.";
+    console.error('Gemini description error:', error);
+    return 'Affordable housing option for students in a prime location.';
   }
 };
 
 export const getAreaInsights = async (area) => {
+  if (!ai) {
+    return 'A popular area for students with plenty of amenities nearby.';
+  }
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -29,6 +55,7 @@ export const getAreaInsights = async (area) => {
     });
     return response.text;
   } catch (error) {
-    return "A popular area for students with plenty of amenities nearby.";
+    console.error('Gemini area insights error:', error);
+    return 'A popular area for students with plenty of amenities nearby.';
   }
 };

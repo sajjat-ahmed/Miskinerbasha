@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { 
@@ -20,11 +19,9 @@ import {
   TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
-  // Added missing icon imports
   ArrowRight,
   Sparkles
 } from 'lucide-react';
-import { Room, BookingRequest, User } from '../types';
 import { 
   BarChart, 
   Bar, 
@@ -35,21 +32,13 @@ import {
   Cell
 } from 'recharts';
 
-interface DashboardProps {
-  rooms: Room[];
-  bookingRequests: BookingRequest[];
-  onUpdateStatus: (id: string, status: 'accepted' | 'rejected') => void;
-  user: User | null;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateStatus, user }) => {
-  const [activeTab, setActiveTab] = useState<'listings' | 'requests'>('listings');
+const Dashboard = ({ rooms, bookingRequests, onUpdateStatus, user }) => {
+  const [activeTab, setActiveTab] = useState('listings');
   
   if (!user || user.role !== 'owner') {
     return <Navigate to="/" replace />;
   }
 
-  // Mock analytics data
   const chartData = [
     { name: 'Mon', views: 400 },
     { name: 'Tue', views: 300 },
@@ -60,8 +49,7 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
     { name: 'Sun', views: 500 },
   ];
 
-  // Dummy area benchmarks
-  const areaBenchmarks: Record<string, number> = {
+  const areaBenchmarks = {
     'Dhanmondi': 7200,
     'Mirpur': 4000,
     'Uttara': 8500,
@@ -71,15 +59,14 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
   };
 
   const myRooms = useMemo(() => {
-    return rooms.filter(r => r.ownerId === 'owner1' || r.ownerId === 'owner2' || r.ownerId === user.id)
+    return rooms.filter(r => r.ownerId === 'owner1' || r.ownerId === 'owner2' || r.ownerId === user?.id)
       .map(room => ({
         ...room,
-        // Mocking individual analytics
         saves: Math.floor(Math.random() * 45) + 5,
         views: Math.floor(Math.random() * 800) + 200,
         areaAvg: areaBenchmarks[room.area] || 6000
       }));
-  }, [rooms, user.id]);
+  }, [rooms, user?.id]);
 
   const myRequests = bookingRequests;
 
@@ -97,7 +84,6 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
           </Link>
         </div>
 
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col gap-2 group hover:border-indigo-100 transition-all">
             <div className="flex justify-between items-start">
@@ -127,7 +113,6 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
           </div>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex bg-white/50 p-1.5 rounded-2xl mb-8 w-fit border border-gray-100 shadow-sm">
           <button 
             onClick={() => setActiveTab('listings')}
@@ -152,7 +137,6 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
 
         {activeTab === 'listings' ? (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {/* Chart */}
             <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
@@ -185,7 +169,6 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
               </div>
             </div>
 
-            {/* Detailed Listings Table */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="p-8 border-b border-gray-50">
                 <h3 className="text-xl font-bold">Property Insights</h3>
@@ -269,7 +252,6 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
               </div>
             </div>
 
-            {/* Area Comparison Card */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-indigo-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-indigo-100">
                 <div className="relative z-10">
@@ -308,7 +290,6 @@ const Dashboard: React.FC<DashboardProps> = ({ rooms, bookingRequests, onUpdateS
             </div>
           </div>
         ) : (
-          /* Requests Table (Same as before but with consistent padding) */
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden animate-in fade-in duration-300">
             <div className="p-8 border-b border-gray-50 flex justify-between items-center">
               <h3 className="text-xl font-bold">Booking Requests</h3>

@@ -1,17 +1,9 @@
-
 import React from 'react';
 import { Heart, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Room } from '../types';
-import RoomCard from '../components/RoomCard';
+import RoomCard from '../components/RoomCard.jsx';
 
-interface FavoritesProps {
-  rooms: Room[];
-  favorites: string[];
-  toggleFavorite: (id: string) => void;
-}
-
-const Favorites: React.FC<FavoritesProps> = ({ rooms, favorites, toggleFavorite }) => {
+const Favorites = ({ rooms, favorites, toggleFavorite }) => {
   const favoriteRooms = rooms.filter(r => favorites.includes(r.id));
 
   return (

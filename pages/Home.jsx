@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, MapPin, GraduationCap, ShieldCheck, Zap } from 'lucide-react';
-import { AREAS } from '../mockData';
+import { AREAS } from '../mockData.js';
 
-const Feature = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) => (
+const Feature = ({ icon: Icon, title, desc }) => (
   <div className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm border border-gray-100 hover:border-indigo-100 hover:shadow-md transition-all">
     <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mb-4">
       <Icon size={24} />
@@ -17,7 +16,6 @@ const Feature = ({ icon: Icon, title, desc }: { icon: any, title: string, desc: 
 const Home = () => {
   return (
     <div className="w-full">
-      {/* Hero Section */}
       <section className="relative bg-white pt-16 pb-24 px-4 overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-indigo-50 -skew-x-12 translate-x-1/2 opacity-50 hidden lg:block" />
         <div className="max-w-6xl mx-auto relative">
@@ -77,14 +75,12 @@ const Home = () => {
                   <p className="text-xs opacity-80">Lowest Seat Rate</p>
                 </div>
               </div>
-              {/* Background dots / decoration */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-50/50 rounded-full blur-3xl -z-10" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Areas Section */}
       <section className="bg-slate-50 py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
@@ -102,7 +98,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="bg-white py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

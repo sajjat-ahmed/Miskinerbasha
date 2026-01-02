@@ -1,17 +1,9 @@
-
 import React, { useState } from 'react';
 import { X, Mail, Lock, Github, Chrome, User as UserIcon, Building2, ArrowRight } from 'lucide-react';
-import { User } from '../types';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onLogin: (user: User) => void;
-}
-
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
+const AuthModal = ({ isOpen, onClose, onLogin }) => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [role, setRole] = useState<'student' | 'owner'>('student');
+  const [role, setRole] = useState('student');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,10 +12,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    // Mock login/signup logic
-    const mockUser: User = {
+    const mockUser = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.name || (formData.email.split('@')[0]),
       email: formData.email,

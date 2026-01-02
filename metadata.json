@@ -1,0 +1,7 @@
+{
+  "name": "Miskinerbasha",
+  "description": "A modern platform for students in Dhaka to find affordable rooms and sublets near universities with map-based search and smart filtering.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

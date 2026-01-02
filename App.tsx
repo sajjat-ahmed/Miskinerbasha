@@ -23,7 +23,7 @@ import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
 import Favorites from './pages/Favorites';
 import AuthModal from './components/AuthModal';
-import { Room, User, BookingRequest } from './types';
+import { Room, User, BookingRequest } from './types' ;
 import { MOCK_ROOMS } from './mockData';
 
 const Navbar = ({ 

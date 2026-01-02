@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -13,19 +12,12 @@ import {
   List,
   RefreshCw
 } from 'lucide-react';
-import { Room, RoomType, GenderPreference } from '../types';
-import RoomCard from '../components/RoomCard';
-import FilterModal from '../components/FilterModal';
-import MapView from '../components/MapPlaceholder'; // Re-using the component we updated
+import RoomCard from '../components/RoomCard.jsx';
+import FilterModal from '../components/FilterModal.jsx';
+import MapView from '../components/MapPlaceholder.jsx';
 
-interface ExploreProps {
-  rooms: Room[];
-  favorites: string[];
-  toggleFavorite: (id: string) => void;
-}
-
-const Explore: React.FC<ExploreProps> = ({ rooms, favorites, toggleFavorite }) => {
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+const Explore = ({ rooms, favorites, toggleFavorite }) => {
+  const [viewMode, setViewMode] = useState('list');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchArea, setShowSearchArea] = useState(false);
@@ -66,8 +58,6 @@ const Explore: React.FC<ExploreProps> = ({ rooms, favorites, toggleFavorite }) =
 
   const handleSearchThisArea = () => {
     setShowSearchArea(false);
-    // In a real app, this would query the backend with geo-bounds.
-    // For MVP, we can reset the area filter to show all in the viewport.
     setFilters(prev => ({ ...prev, area: 'all' }));
   };
 

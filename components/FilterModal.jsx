@@ -1,16 +1,8 @@
-
 import React from 'react';
 import { X } from 'lucide-react';
-import { AREAS } from '../mockData';
+import { AREAS } from '../mockData.js';
 
-interface FilterModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  filters: any;
-  setFilters: (filters: any) => void;
-}
-
-const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, filters, setFilters }) => {
+const FilterModal = ({ isOpen, onClose, filters, setFilters }) => {
   if (!isOpen) return null;
 
   return (

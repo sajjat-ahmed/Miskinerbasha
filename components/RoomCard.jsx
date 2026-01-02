@@ -1,16 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MapPin, Users, CheckCircle } from 'lucide-react';
-import { Room } from '../types';
 
-interface RoomCardProps {
-  room: Room;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
-}
-
-const RoomCard: React.FC<RoomCardProps> = ({ room, isFavorite, onToggleFavorite }) => {
+const RoomCard = ({ room, isFavorite, onToggleFavorite }) => {
   return (
     <div className="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-indigo-50 transition-all duration-300 transform hover:-translate-y-1">
       {/* Favorite Button */}

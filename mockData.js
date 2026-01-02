@@ -1,9 +1,8 @@
-
-import { Room, RoomType, GenderPreference } from './types';
+import { RoomType, GenderPreference } from './types.js';
 
 export const AREAS = ['Dhanmondi', 'Mirpur', 'Uttara', 'Mohammadpur', 'Banani', 'Farmgate', 'Badda'];
 
-export const MOCK_ROOMS: Room[] = [
+export const MOCK_ROOMS = [
   {
     id: '1',
     title: 'Spacious Single Room near UIU',

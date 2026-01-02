@@ -1,66 +1,104 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import L from 'leaflet';
 import { Room } from '../types';
-import { MapPin } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface MapPlaceholderProps {
+interface MapViewProps {
   rooms: Room[];
+  onBoundsChange?: (bounds: L.LatLngBounds) => void;
 }
 
-const MapPlaceholder: React.FC<MapPlaceholderProps> = ({ rooms }) => {
-  return (
-    <div className="w-full h-full bg-[#e3eaef] relative overflow-hidden">
-      {/* Grid Pattern to look like a map */}
-      <div className="absolute inset-0 opacity-20" style={{ 
-        backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', 
-        backgroundSize: '40px 40px' 
-      }}></div>
+const MapView: React.FC<MapViewProps> = ({ rooms, onBoundsChange }) => {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const navigate = useNavigate();
 
-      {/* Simulated City Blocks */}
-      <div className="absolute top-1/4 left-1/4 w-32 h-64 bg-white/40 rounded-lg -rotate-12 border border-indigo-200"></div>
-      <div className="absolute top-1/2 right-1/4 w-48 h-32 bg-white/40 rounded-lg rotate-6 border border-indigo-200"></div>
-      <div className="absolute bottom-1/4 left-1/3 w-64 h-48 bg-white/40 rounded-lg -rotate-6 border border-indigo-200"></div>
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
 
-      {/* Markers */}
-      {rooms.map((room, idx) => {
-        // Deterministic random positions for markers based on room data if no actual lat/lng
-        // Using room coords if they make sense relative to a center point or just demo offsets
-        const top = 20 + (idx * 15) % 60;
-        const left = 20 + (idx * 23) % 60;
+    // Initialize map
+    const dhakaCenter: [number, number] = [23.777176, 90.399452];
+    mapRef.current = L.map(mapContainerRef.current, {
+      zoomControl: false,
+    }).setView(dhakaCenter, 13);
 
-        return (
-          <div 
-            key={room.id}
-            className="absolute z-10 transition-transform hover:scale-110 cursor-pointer"
-            style={{ top: `${top}%`, left: `${left}%` }}
-          >
-            <div className="relative group">
-              <div className="bg-white border-2 border-indigo-600 px-3 py-1 rounded-full shadow-lg flex items-center gap-1 hover:bg-indigo-600 hover:text-white transition-all">
-                <span className="text-xs font-black">৳{Math.floor(room.price/1000)}k</span>
-              </div>
-              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-indigo-600"></div>
-              
-              {/* Tooltip/Small Card on Hover */}
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-40 bg-white rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none p-2 border border-gray-100">
-                <img src={room.images[0]} className="w-full h-20 object-cover rounded-lg mb-2" />
-                <p className="text-[10px] font-bold line-clamp-1">{room.title}</p>
-                <p className="text-[10px] text-indigo-600 font-black">৳{room.price}</p>
-              </div>
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(mapRef.current);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
+
+    // Event listeners for bounds change
+    mapRef.current.on('moveend', () => {
+      if (mapRef.current && onBoundsChange) {
+        onBoundsChange(mapRef.current.getBounds());
+      }
+    });
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers
+    rooms.forEach(room => {
+      const icon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div class="marker-pin">৳${Math.floor(room.price / 1000)}k</div>`,
+        iconSize: [40, 30],
+        iconAnchor: [20, 15]
+      });
+
+      const marker = L.marker([room.location.lat, room.location.lng], { icon })
+        .addTo(mapRef.current!)
+        .bindPopup(`
+          <div class="flex flex-col">
+            <img src="${room.images[0]}" class="w-full h-32 object-cover rounded-t-xl" alt="${room.title}" />
+            <div class="p-3">
+              <h4 class="font-bold text-gray-900 text-sm line-clamp-1">${room.title}</h4>
+              <p class="text-xs text-indigo-600 font-black mb-2">৳${room.price.toLocaleString()} / month</p>
+              <button id="view-room-${room.id}" class="w-full bg-indigo-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-all">View Details</button>
             </div>
           </div>
-        );
-      })}
+        `, {
+          closeButton: false,
+          offset: L.point(0, -10)
+        });
 
-      {/* Map Labels */}
-      <div className="absolute top-10 left-10 text-gray-400 font-bold text-xl uppercase tracking-widest opacity-30 select-none">Dhaka City Map</div>
-      <div className="absolute bottom-10 right-10 flex flex-col items-end gap-2">
-        <div className="bg-white p-2 rounded-lg shadow-md flex flex-col gap-1">
-          <button className="w-8 h-8 flex items-center justify-center border-b border-gray-100 hover:bg-gray-50 text-gray-500 font-bold text-lg">+</button>
-          <button className="w-8 h-8 flex items-center justify-center hover:bg-gray-50 text-gray-500 font-bold text-lg">-</button>
-        </div>
-      </div>
-    </div>
-  );
+      marker.on('popupopen', () => {
+        const btn = document.getElementById(`view-room-${room.id}`);
+        if (btn) {
+          btn.addEventListener('click', () => {
+            navigate(`/room/${room.id}`);
+          });
+        }
+      });
+
+      markersRef.current.push(marker);
+    });
+
+    // Fit bounds if there are markers
+    if (rooms.length > 0 && mapRef.current) {
+      const group = L.featureGroup(markersRef.current);
+      mapRef.current.fitBounds(group.getBounds().pad(0.1));
+    }
+  }, [rooms, navigate]);
+
+  return <div ref={mapContainerRef} className="w-full h-full" />;
 };
 
-export default MapPlaceholder;
+export default MapView;

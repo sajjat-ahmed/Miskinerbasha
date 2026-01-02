@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Heart, 
@@ -12,29 +12,45 @@ import {
   MessageSquare,
   GraduationCap,
   Info,
-  ExternalLink,
-  Wifi,
-  Wind,
-  Droplets,
-  Tv,
-  Users
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Calendar,
+  Clock
 } from 'lucide-react';
-import { Room } from '../types';
-import { getSmartRoomDescription, getAreaInsights } from '../geminiService';
+import { Room, BookingRequest, User } from '../types';
+import { getAreaInsights } from '../geminiService';
 
 interface RoomDetailProps {
   rooms: Room[];
   favorites: string[];
   toggleFavorite: (id: string) => void;
+  onBookRequest: (request: Omit<BookingRequest, 'id' | 'status' | 'createdAt'>) => void;
+  currentUser: User | null;
+  onLoginRequired: () => void;
 }
 
-const RoomDetail: React.FC<RoomDetailProps> = ({ rooms, favorites, toggleFavorite }) => {
+const RoomDetail: React.FC<RoomDetailProps> = ({ 
+  rooms, 
+  favorites, 
+  toggleFavorite, 
+  onBookRequest,
+  currentUser,
+  onLoginRequired
+}) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const room = rooms.find(r => r.id === id);
   const [activeImage, setActiveImage] = useState(0);
   const [aiInsight, setAiInsight] = useState<string>('');
   const [loadingAi, setLoadingAi] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [bookingFormData, setBookingFormData] = useState({
+    moveInDate: '',
+    duration: '6 Months'
+  });
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (room) {
@@ -50,8 +66,115 @@ const RoomDetail: React.FC<RoomDetailProps> = ({ rooms, favorites, toggleFavorit
 
   const isFavorite = favorites.includes(room.id);
 
+  const nextImage = () => {
+    setActiveImage((prev) => (prev + 1) % room.images.length);
+  };
+
+  const prevImage = () => {
+    setActiveImage((prev) => (prev - 1 + room.images.length) % room.images.length);
+  };
+
+  const handleRequestBook = () => {
+    if (!currentUser) {
+      onLoginRequired();
+    } else {
+      setIsBookingModalOpen(true);
+    }
+  };
+
+  const handleBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    
+    onBookRequest({
+      roomId: room.id,
+      roomTitle: room.title,
+      studentName: currentUser.name,
+      studentEmail: currentUser.email,
+      moveInDate: bookingFormData.moveInDate,
+      duration: bookingFormData.duration
+    });
+    setIsBookingModalOpen(false);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
   return (
     <div className="flex-1 overflow-y-auto bg-white custom-scrollbar pb-24 lg:pb-0">
+      {/* Success Toast */}
+      {showSuccess && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-emerald-500 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-in slide-in-from-top duration-300">
+          <CheckCircle size={18} />
+          Booking Request Sent Successfully!
+        </div>
+      )}
+
+      {/* Booking Modal */}
+      {isBookingModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsBookingModalOpen(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-black text-gray-900">Request to Book</h2>
+                <button onClick={() => setIsBookingModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl mb-8">
+                <img src={room.images[0]} className="w-16 h-16 rounded-xl object-cover" />
+                <div>
+                  <h4 className="font-bold text-gray-900 line-clamp-1 text-sm">{room.title}</h4>
+                  <p className="text-indigo-600 font-black text-lg">৳{room.price.toLocaleString()}</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleBookingSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Move-in Date</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input 
+                      type="date" 
+                      required
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-indigo-100 outline-none font-bold"
+                      value={bookingFormData.moveInDate}
+                      onChange={(e) => setBookingFormData({...bookingFormData, moveInDate: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Duration</label>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <select 
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-indigo-100 outline-none font-bold appearance-none"
+                      value={bookingFormData.duration}
+                      onChange={(e) => setBookingFormData({...bookingFormData, duration: e.target.value})}
+                    >
+                      <option>3 Months</option>
+                      <option>6 Months</option>
+                      <option>12 Months</option>
+                      <option>1 Year+</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-xs text-amber-700 font-medium leading-relaxed">
+                  <strong>Note:</strong> Sending a request does not charge your card. The owner will review your profile and contact you.
+                </div>
+
+                <button type="submit" className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                  Send Booking Request
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 py-6 md:px-8">
         {/* Navigation & Actions */}
         <div className="flex items-center justify-between mb-8">
@@ -79,19 +202,57 @@ const RoomDetail: React.FC<RoomDetailProps> = ({ rooms, favorites, toggleFavorit
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Main Content */}
           <div className="flex-1 space-y-10">
-            {/* Gallery */}
+            {/* Carousel Gallery */}
             <div className="space-y-4">
-              <div className="relative aspect-video rounded-3xl overflow-hidden border-4 border-white shadow-2xl">
-                <img src={room.images[activeImage]} alt={room.title} className="w-full h-full object-cover" />
+              <div className="relative group aspect-video rounded-3xl overflow-hidden border-4 border-white shadow-2xl bg-gray-100">
+                <img 
+                  src={room.images[activeImage]} 
+                  alt={`${room.title} - view ${activeImage + 1}`} 
+                  className="w-full h-full object-cover transition-opacity duration-300" 
+                />
+                
+                {/* Carousel Controls */}
+                {room.images.length > 1 && (
+                  <>
+                    <button 
+                      onClick={prevImage}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                    <button 
+                      onClick={nextImage}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                    
+                    {/* Image Counter Badge */}
+                    <div className="absolute bottom-4 right-4 bg-gray-900/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold tracking-wider">
+                      {activeImage + 1} / {room.images.length}
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+
+              {/* Thumbnails */}
+              <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar scrollbar-hide">
                 {room.images.map((img, idx) => (
                   <button 
                     key={idx} 
                     onClick={() => setActiveImage(idx)}
-                    className={`w-32 h-24 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${activeImage === idx ? 'border-indigo-600 scale-95 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    className={`w-28 h-20 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 relative ${
+                      activeImage === idx 
+                        ? 'border-indigo-600 ring-2 ring-indigo-100 scale-95 shadow-md' 
+                        : 'border-transparent opacity-60 hover:opacity-100'
+                    }`}
                   >
-                    <img src={img} className="w-full h-full object-cover" />
+                    <img src={img} className="w-full h-full object-cover" alt={`Thumbnail ${idx + 1}`} />
+                    {activeImage === idx && (
+                      <div className="absolute inset-0 bg-indigo-600/10" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -227,14 +388,23 @@ const RoomDetail: React.FC<RoomDetailProps> = ({ rooms, favorites, toggleFavorit
                   </div>
                 </div>
 
-                <button className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">
-                  <Phone size={22} />
-                  Call Owner Now
+                <button 
+                  onClick={handleRequestBook}
+                  className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3 mb-4"
+                >
+                  Request to Book
                 </button>
-                <button className="w-full mt-4 bg-emerald-500 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-emerald-100 hover:bg-emerald-600 transition-all flex items-center justify-center gap-3">
-                  <MessageSquare size={22} />
-                  WhatsApp
-                </button>
+
+                <div className="flex gap-2">
+                  <button className="flex-1 bg-white border border-gray-200 text-gray-900 py-4 rounded-2xl font-black text-sm shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                    <Phone size={18} />
+                    Call
+                  </button>
+                  <button className="flex-1 bg-emerald-500 text-white py-4 rounded-2xl font-black text-sm shadow-md hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
+                    <MessageSquare size={18} />
+                    WhatsApp
+                  </button>
+                </div>
                 
                 <p className="mt-6 text-center text-xs text-gray-400 font-bold uppercase tracking-widest">Available from Nov 1st</p>
               </div>

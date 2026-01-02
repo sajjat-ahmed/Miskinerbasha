@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { 
   Camera, 
   MapPin, 
@@ -10,18 +10,24 @@ import {
   Sparkles,
   Info
 } from 'lucide-react';
-import { RoomType, GenderPreference, Room } from '../types';
+import { RoomType, GenderPreference, Room, User } from '../types';
 import { getSmartRoomDescription } from '../geminiService';
 
 interface CreateListingProps {
   setRooms: React.Dispatch<React.SetStateAction<Room[]>>;
+  user: User | null;
+  onLoginRequired: () => void;
 }
 
-const CreateListing: React.FC<CreateListingProps> = ({ setRooms }) => {
+const CreateListing: React.FC<CreateListingProps> = ({ setRooms, user, onLoginRequired }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loadingAi, setLoadingAi] = useState(false);
   
+  if (!user || user.role !== 'owner') {
+    return <Navigate to="/" replace />;
+  }
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -68,8 +74,8 @@ const CreateListing: React.FC<CreateListingProps> = ({ setRooms }) => {
       amenities: formData.amenities,
       rules: formData.rules,
       images: ['https://picsum.photos/id/111/800/600'],
-      ownerId: 'owner1',
-      ownerName: 'Current User',
+      ownerId: user.id,
+      ownerName: user.name,
       isVerified: false,
       isAvailable: true,
       nearbyUniversities: [{ name: 'Nearby University', distance: '1.0 km' }],

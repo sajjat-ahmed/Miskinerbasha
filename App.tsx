@@ -6,13 +6,15 @@ import {
   Map as MapIcon, 
   List, 
   Heart, 
-  User, 
+  User as UserIcon, 
   PlusCircle, 
   Menu, 
   X,
   Home as HomeIcon,
   Compass,
-  ArrowRight
+  ArrowRight,
+  LogOut,
+  LayoutDashboard
 } from 'lucide-react';
 import Home from './pages/Home';
 import Explore from './pages/Explore';
@@ -20,12 +22,24 @@ import RoomDetail from './pages/RoomDetail';
 import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
 import Favorites from './pages/Favorites';
-import { Room, User as UserType } from './types';
+import AuthModal from './components/AuthModal';
+import { Room, User, BookingRequest } from './types';
 import { MOCK_ROOMS } from './mockData';
 
-const Navbar = ({ toggleMenu }: { toggleMenu: () => void }) => {
+const Navbar = ({ 
+  user, 
+  onLogout, 
+  onLoginClick, 
+  toggleMenu 
+}: { 
+  user: User | null, 
+  onLogout: () => void, 
+  onLoginClick: () => void,
+  toggleMenu: () => void 
+}) => {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
+  const [showDropdown, setShowDropdown] = useState(false);
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 px-4 py-3 md:px-8 flex items-center justify-between">
@@ -39,26 +53,75 @@ const Navbar = ({ toggleMenu }: { toggleMenu: () => void }) => {
       <div className="hidden md:flex items-center gap-8 text-sm font-medium">
         <Link to="/explore" className={`${isActive('/explore') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'} transition-colors`}>Explore</Link>
         <Link to="/favorites" className={`${isActive('/favorites') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'} transition-colors`}>Favorites</Link>
-        <Link to="/dashboard" className={`${isActive('/dashboard') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'} transition-colors`}>Dashboard</Link>
+        {user?.role === 'owner' && (
+          <Link to="/dashboard" className={`${isActive('/dashboard') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'} transition-colors`}>Dashboard</Link>
+        )}
       </div>
 
       <div className="flex items-center gap-4">
-        <Link to="/create" className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">
-          <PlusCircle size={18} />
-          Post Room
-        </Link>
+        {user?.role === 'owner' && (
+          <Link to="/create" className="hidden sm:flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">
+            <PlusCircle size={18} />
+            Post Room
+          </Link>
+        )}
+        
+        {user ? (
+          <div className="relative">
+            <button 
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 border border-gray-100 p-1.5 rounded-2xl transition-all"
+            >
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 border border-indigo-200 overflow-hidden">
+                <img src={user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="profile" />
+              </div>
+              <span className="hidden lg:block text-sm font-bold text-gray-900 pr-2">{user.name.split(' ')[0]}</span>
+            </button>
+            
+            {showDropdown && (
+              <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-100 shadow-2xl rounded-3xl p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-3 border-b border-gray-50 mb-2">
+                  <p className="font-black text-gray-900 text-sm truncate">{user.name}</p>
+                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">{user.role}</p>
+                </div>
+                <div className="space-y-1">
+                  <Link 
+                    to={user.role === 'owner' ? '/dashboard' : '/favorites'} 
+                    onClick={() => setShowDropdown(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-indigo-50 text-gray-600 hover:text-indigo-600 rounded-xl transition-all text-sm font-bold"
+                  >
+                    <LayoutDashboard size={18} />
+                    My Workspace
+                  </Link>
+                  <button 
+                    onClick={() => { onLogout(); setShowDropdown(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-rose-50 text-gray-600 hover:text-rose-600 rounded-xl transition-all text-sm font-bold"
+                  >
+                    <LogOut size={18} />
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button 
+            onClick={onLoginClick}
+            className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-2xl text-sm font-bold hover:bg-black transition-all shadow-xl shadow-gray-200"
+          >
+            Log In
+          </button>
+        )}
+
         <button className="md:hidden text-gray-500" onClick={toggleMenu}>
           <Menu size={24} />
         </button>
-        <div className="hidden md:block w-9 h-9 rounded-full bg-gray-200 border border-gray-100 overflow-hidden cursor-pointer">
-          <img src="https://picsum.photos/id/64/100/100" alt="profile" />
-        </div>
       </div>
     </nav>
   );
 };
 
-const MobileMenu = ({ isOpen, close }: { isOpen: boolean, close: () => void }) => {
+const MobileMenu = ({ isOpen, close, user, onLoginClick }: { isOpen: boolean, close: () => void, user: User | null, onLoginClick: () => void }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[100] bg-white flex flex-col p-6 animate-in slide-in-from-right duration-300">
@@ -70,12 +133,25 @@ const MobileMenu = ({ isOpen, close }: { isOpen: boolean, close: () => void }) =
         <Link to="/" onClick={close} className="flex items-center gap-4 text-gray-800"><HomeIcon /> Home</Link>
         <Link to="/explore" onClick={close} className="flex items-center gap-4 text-gray-800"><Compass /> Explore</Link>
         <Link to="/favorites" onClick={close} className="flex items-center gap-4 text-gray-800"><Heart /> Favorites</Link>
-        <Link to="/dashboard" onClick={close} className="flex items-center gap-4 text-gray-800"><User /> My Profile</Link>
+        {user?.role === 'owner' && (
+          <Link to="/dashboard" onClick={close} className="flex items-center gap-4 text-gray-800"><LayoutDashboard /> Dashboard</Link>
+        )}
       </div>
-      <div className="mt-auto">
-        <Link to="/create" onClick={close} className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-4 rounded-xl font-bold">
-          <PlusCircle /> Post a Room
-        </Link>
+      <div className="mt-auto flex flex-col gap-4">
+        {!user ? (
+          <button 
+            onClick={() => { onLoginClick(); close(); }}
+            className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-4 rounded-xl font-bold"
+          >
+            Log In to Continue
+          </button>
+        ) : (
+          user.role === 'owner' && (
+            <Link to="/create" onClick={close} className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-4 rounded-xl font-bold">
+              <PlusCircle /> Post a Room
+            </Link>
+          )
+        )}
       </div>
     </div>
   );
@@ -85,24 +161,94 @@ const App: React.FC = () => {
   const [rooms, setRooms] = useState<Room[]>(MOCK_ROOMS);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [bookingRequests, setBookingRequests] = useState<BookingRequest[]>([]);
+
+  // Load user from storage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) setCurrentUser(JSON.parse(savedUser));
+  }, []);
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem('user', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('user');
+  };
 
   const toggleFavorite = (id: string) => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     setFavorites(prev => prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]);
+  };
+
+  const addBookingRequest = (request: Omit<BookingRequest, 'id' | 'status' | 'createdAt'>) => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    const newRequest: BookingRequest = {
+      ...request,
+      id: Date.now().toString(),
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      studentName: currentUser.name,
+      studentEmail: currentUser.email
+    };
+    setBookingRequests(prev => [newRequest, ...prev]);
+  };
+
+  const updateRequestStatus = (id: string, status: 'accepted' | 'rejected') => {
+    setBookingRequests(prev => prev.map(req => req.id === id ? { ...req, status } : req));
   };
 
   return (
     <HashRouter>
       <div className="min-h-screen flex flex-col bg-slate-50">
-        <Navbar toggleMenu={() => setIsMenuOpen(true)} />
-        <MobileMenu isOpen={isMenuOpen} close={() => setIsMenuOpen(false)} />
+        <Navbar 
+          user={currentUser} 
+          onLogout={handleLogout} 
+          onLoginClick={() => setIsAuthModalOpen(true)}
+          toggleMenu={() => setIsMenuOpen(true)} 
+        />
+        <MobileMenu 
+          isOpen={isMenuOpen} 
+          close={() => setIsMenuOpen(false)} 
+          user={currentUser}
+          onLoginClick={() => setIsAuthModalOpen(true)}
+        />
+        <AuthModal 
+          isOpen={isAuthModalOpen} 
+          onClose={() => setIsAuthModalOpen(false)} 
+          onLogin={handleLogin} 
+        />
         
         <main className="flex-1 overflow-hidden flex flex-col">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore rooms={rooms} favorites={favorites} toggleFavorite={toggleFavorite} />} />
-            <Route path="/room/:id" element={<RoomDetail rooms={rooms} favorites={favorites} toggleFavorite={toggleFavorite} />} />
-            <Route path="/dashboard" element={<Dashboard rooms={rooms} />} />
-            <Route path="/create" element={<CreateListing setRooms={setRooms} />} />
+            <Route 
+              path="/room/:id" 
+              element={
+                <RoomDetail 
+                  rooms={rooms} 
+                  favorites={favorites} 
+                  toggleFavorite={toggleFavorite} 
+                  onBookRequest={addBookingRequest}
+                  currentUser={currentUser}
+                  onLoginRequired={() => setIsAuthModalOpen(true)}
+                />
+              } 
+            />
+            <Route path="/dashboard" element={<Dashboard rooms={rooms} bookingRequests={bookingRequests} onUpdateStatus={updateRequestStatus} user={currentUser} />} />
+            <Route path="/create" element={<CreateListing setRooms={setRooms} user={currentUser} onLoginRequired={() => setIsAuthModalOpen(true)} />} />
             <Route path="/favorites" element={<Favorites rooms={rooms} favorites={favorites} toggleFavorite={toggleFavorite} />} />
           </Routes>
         </main>

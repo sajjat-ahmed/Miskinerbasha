@@ -43,4 +43,17 @@ export interface User {
   email: string;
   role: 'student' | 'owner';
   favorites: string[];
+  avatar?: string;
+}
+
+export interface BookingRequest {
+  id: string;
+  roomId: string;
+  roomTitle: string;
+  studentName: string;
+  studentEmail: string;
+  moveInDate: string;
+  duration: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
 }

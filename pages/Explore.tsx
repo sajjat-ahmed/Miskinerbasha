@@ -10,12 +10,13 @@ import {
   ChevronRight,
   Info,
   Navigation,
-  List
+  List,
+  RefreshCw
 } from 'lucide-react';
 import { Room, RoomType, GenderPreference } from '../types';
 import RoomCard from '../components/RoomCard';
 import FilterModal from '../components/FilterModal';
-import MapPlaceholder from '../components/MapPlaceholder';
+import MapView from '../components/MapPlaceholder'; // Re-using the component we updated
 
 interface ExploreProps {
   rooms: Room[];
@@ -27,6 +28,7 @@ const Explore: React.FC<ExploreProps> = ({ rooms, favorites, toggleFavorite }) =
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchArea, setShowSearchArea] = useState(false);
   const [filters, setFilters] = useState({
     budget: 20000,
     type: 'all',
@@ -55,6 +57,19 @@ const Explore: React.FC<ExploreProps> = ({ rooms, favorites, toggleFavorite }) =
       return matchesSearch && matchesBudget && matchesType && matchesGender && matchesArea;
     });
   }, [rooms, searchQuery, filters]);
+
+  const handleMapBoundsChange = () => {
+    if (!showSearchArea) {
+      setShowSearchArea(true);
+    }
+  };
+
+  const handleSearchThisArea = () => {
+    setShowSearchArea(false);
+    // In a real app, this would query the backend with geo-bounds.
+    // For MVP, we can reset the area filter to show all in the viewport.
+    setFilters(prev => ({ ...prev, area: 'all' }));
+  };
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -146,9 +161,22 @@ const Explore: React.FC<ExploreProps> = ({ rooms, favorites, toggleFavorite }) =
 
         {/* Map Side */}
         {(viewMode === 'map' || window.innerWidth >= 1024) && (
-          <div className={`flex-1 bg-gray-200 relative ${viewMode === 'map' ? 'block' : 'hidden lg:block'}`}>
-            <MapPlaceholder rooms={filteredRooms} />
+          <div className={`flex-1 bg-gray-100 relative ${viewMode === 'map' ? 'block' : 'hidden lg:block'}`}>
+            <MapView rooms={filteredRooms} onBoundsChange={handleMapBoundsChange} />
             
+            {/* Search This Area Button */}
+            {showSearchArea && (
+              <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[1000]">
+                <button 
+                  onClick={handleSearchThisArea}
+                  className="bg-white px-6 py-2.5 rounded-full shadow-2xl border border-gray-100 flex items-center gap-2 text-sm font-bold text-gray-900 hover:bg-gray-50 transition-all animate-in fade-in zoom-in-95 duration-200"
+                >
+                  <RefreshCw size={16} className="text-indigo-600" />
+                  Search this area
+                </button>
+              </div>
+            )}
+
             {/* Overlay UI for Map */}
             <div className="absolute top-4 left-4 right-4 flex justify-center lg:hidden">
               <button 
@@ -160,9 +188,9 @@ const Explore: React.FC<ExploreProps> = ({ rooms, favorites, toggleFavorite }) =
               </button>
             </div>
             
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-white px-6 py-3 rounded-full shadow-xl text-sm font-medium flex items-center gap-2">
+            <div className="absolute bottom-20 lg:bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-white px-6 py-3 rounded-full shadow-xl text-sm font-medium flex items-center gap-2 z-[1000]">
               <Navigation size={16} className="text-indigo-600" />
-              Moving map updates results automatically
+              Real-time map view
             </div>
           </div>
         )}
